@@ -18,7 +18,7 @@ def extractFiles(path, delimiter):
 
 
 def transformBancos():
-  bancos = extractFiles('gs://ingest-207c30567ab/raw_ingest/Bancos/EnquadramentoInicia_v2.tsv', '\t')
+  bancos = extractFiles('path', '\t')
 
   df_bancos = bancos.withColumn("Nome", F.regexp_replace('Nome', '(-).*', '')) \
     .withColumn('Nome', F.regexp_replace('Nome', 'CR DITO', 'CRÉDITO')) \
@@ -31,7 +31,7 @@ def transformBancos():
 
 def tranformReclamacoes():
 
-  reclamacoes = extractFiles('gs://ingest-207c30567ab/raw_ingest/Reclamacoes/', ';')
+  reclamacoes = extractFiles('path', ';')
 
   df_reclamacoes = reclamacoes.withColumn("Instituição financeira", F.regexp_replace("Instituição financeira", "[(conglomerado)]", "")) 
 
@@ -43,7 +43,7 @@ def tranformReclamacoes():
 
 
 def transformEmpregados():
-  df_empregados = extractFiles('gs://ingest-207c30567ab/raw_ingest/Empregados/', '|')
+  df_empregados = extractFiles('path', '|')
   df_empregados = df_empregados.withColumnRenamed("Nome","Nome_Instituicao")
   df_empregados = df_empregados.withColumnRenamed("Segmento","Segmento_Banco")
 
@@ -63,12 +63,12 @@ def loadFile ():
 
   # Save CSV
   inner_df.write.option("header",True) \
-    .csv("gs://ingest-207c30567ab/target/target_"+str(date_now))
+    .csv("path"+str(date_now))
   
   # Save into BQ
   inner_df.write.format('bigquery') \
     .option('table', 'spartan-rhino-396412.ingest.table_union') \
-    .option("temporaryGcsBucket","ingest-207c30567ab") \
+    .option("temporaryGcsBucket","path") \
     .save()
   
 
