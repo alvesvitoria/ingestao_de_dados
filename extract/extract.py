@@ -121,16 +121,15 @@ def main():
     ])
 
 
-    df_banks = extractFiles('gs://souce_files_banks/Dados/Dados/Bancos/EnquadramentoInicia_v2.tsv/', '\t', schema_banks)
+    df_banks = extractFiles('gs://staging_ingest/Dados/Bancos/EnquadramentoInicia_v2.tsv/', '\t', schema_banks)
     saveStorage (df_banks, 'bank')
 
-    df_employee = extractFiles('gs://souce_files_banks/Dados/Dados/Empregados/', '|', schema_employee)
+    df_employee = extractFiles('gs://staging_ingest/Dados/Empregados/*', '|', schema_employee)
     saveStorage (df_employee, 'employee')
 
-    df_complaint = extractFiles('gs://souce_files_banks/Dados/Dados/Reclamações/', ';', schema_complaint)
+    df_complaint = extractFiles('gs://staging_ingest/Dados/Reclamacoes/*', ';', schema_complaint)
     saveStorage (df_complaint, 'complaint')
 
-  
   
 if __name__ == "__main__":
   main()
