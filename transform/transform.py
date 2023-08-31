@@ -7,47 +7,21 @@ from pyspark.sql.functions import mean, sum
 spark = SparkSession.builder.appName('Ingest').getOrCreate()
 date_now = date.today()
 
-
 def extractFiles(path, delimiter):
-
   df = spark.read \
-    .option("delimiter", delimiter) \
-    .option("header", True) \
-    .option("encoding", "UTF-8") \
-    .csv(path)
+  .option("delimiter", delimiter) \
+  .option("header", True) \
+  .option("encoding", "UTF-8") \
+  .parquet(path)
   
   return df
 
 
-def transformBanks():
-  banks = extractFiles('gs://ingest-207c30567ab/raw/bank/'+str(date_now)+'/part*',';')
-
-  df_banks = banks.withColumn("Nome_banco", split("nome", " - ")[0]).withColumn("apagar", split("nome", " - ")[1])
-  columns_to_drop = ["nome", "apagar"]
-  df_banks = df_banks.select([col for col in df_banks.columns if col not in columns_to_drop])
-
-  return df_banks
-
-
-def tranformComplaint():
-
-  complaint = extractFiles('gs://ingest-207c30567ab/raw/complaint/'+str(date_now)+'/part*', ';')
-  df_complaint = complaint.withColumn("instituicao_financeira", split("instituicao_financeira", " \\(")[0])
-
-  return df_complaint
-
-
-def transformEmployee():
-  df_employee = extractFiles('gs://ingest-207c30567ab/raw/employee/'+str(date_now)+'/part*', ';') 
-
-  return df_employee
-
-
 def joinDatasets ():
   
-  df_banks = transformBanks()
-  df_complaint = tranformComplaint()
-  df_employee = transformEmployee()
+  df_banks = extractFiles('gs://ingest-207c30567ab/prepared/banks/'+str(date_now)+'/part*', ';')
+  df_complaint = extractFiles('gs://ingest-207c30567ab/prepared/complaint/'+str(date_now)+'/part*', ';')
+  df_employee = extractFiles('gs://ingest-207c30567ab/prepared/employee/'+str(date_now)+'/part*', ';')
 
   # Join DataFrames
   df_join1 = df_banks.join(df_employee, df_banks["Nome_banco"] == df_employee["nome_bank"], "inner")
@@ -77,15 +51,15 @@ def loadDatasets():
 
   # Save into BQ
   df_select.write.format('bigquery') \
-      .option('table', 'spartan-rhino-396412.ingest.union_final') \
+      .option('table', 'spartan-rhino-396412.ingest.union_final_ingest') \
       .option("temporaryGcsBucket","ingest-207c30567ab") \
       .save()
-    
-  
-def main():
 
+
+def main():
+  
   joinDatasets()
-  loadDatasets()  
+  loadDatasets() 
 
 
 if __name__ == "__main__":
